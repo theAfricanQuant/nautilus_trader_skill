@@ -3,19 +3,18 @@ Run the EMA crossover backtest.
 """
 
 import json
-import sys
 from decimal import Decimal
 from pathlib import Path
 
-import pandas as pd
+from data_loader import load_data
 
 from nautilus_trader.backtest.config import BacktestEngineConfig
 from nautilus_trader.backtest.engine import BacktestEngine
-from nautilus_trader.model.currencies import USD
+from nautilus_trader.model.currencies import Currency
 from nautilus_trader.model.data import Bar, BarType
 from nautilus_trader.model.enums import AccountType, OmsType
-from nautilus_trader.model.identifiers import InstrumentId, TraderId, Venue
-from nautilus_trader.model.instruments import CurrencyPair
+from nautilus_trader.model.identifiers import InstrumentId, Symbol, TraderId, Venue
+from nautilus_trader.model.instruments import CurrencyPair, Equity
 from nautilus_trader.model.objects import Money, Price, Quantity
 
 CONFIG_PATH = Path(__file__).parent / "config.json"
@@ -36,45 +35,57 @@ def precision_increment(precision: int) -> str:
 def make_instrument(config):
     instrument_cfg = config["instrument"]
     instrument_id = InstrumentId.from_str(instrument_cfg["id"])
+    instrument_type = instrument_cfg.get("type", "CurrencyPair")
 
-    from nautilus_trader.model.currencies import Currency
-    from nautilus_trader.model.identifiers import Symbol
+    if instrument_type == "CurrencyPair":
+        from nautilus_trader.model.currencies import Currency as Ccy
+        base = Ccy.from_str(instrument_cfg["base_currency"])
+        quote = Ccy.from_str(instrument_cfg["quote_currency"])
+        price_precision = instrument_cfg["price_precision"]
+        size_precision = instrument_cfg.get("size_precision", 0)
 
-    base = Currency.from_str(instrument_cfg["base_currency"])
-    quote = Currency.from_str(instrument_cfg["quote_currency"])
-    price_precision = instrument_cfg["price_precision"]
-    size_precision = instrument_cfg["size_precision"]
+        return CurrencyPair(
+            instrument_id=instrument_id,
+            raw_symbol=Symbol(instrument_id.symbol.value),
+            base_currency=base,
+            quote_currency=quote,
+            price_precision=price_precision,
+            size_precision=size_precision,
+            price_increment=Price.from_str(precision_increment(price_precision)),
+            size_increment=Quantity.from_str(precision_increment(size_precision)),
+            maker_fee=Decimal("0.0001"),
+            taker_fee=Decimal("0.0001"),
+            ts_event=0,
+            ts_init=0,
+        )
 
-    return CurrencyPair(
-        instrument_id=instrument_id,
-        raw_symbol=Symbol(instrument_id.symbol.value),
-        base_currency=base,
-        quote_currency=quote,
-        price_precision=price_precision,
-        size_precision=size_precision,
-        price_increment=Price.from_str(precision_increment(price_precision)),
-        size_increment=Quantity.from_str(precision_increment(size_precision)),
-        maker_fee=Decimal("0.0001"),
-        taker_fee=Decimal("0.0001"),
-        ts_event=0,
-        ts_init=0,
-    )
+    if instrument_type == "Equity":
+        currency = Currency.from_str(instrument_cfg.get("currency", "USD"))
+        price_precision = instrument_cfg["price_precision"]
+        lot_size = Quantity.from_str(str(instrument_cfg.get("lot_size", "1")))
+
+        return Equity(
+            instrument_id=instrument_id,
+            raw_symbol=Symbol(instrument_cfg.get("symbol", instrument_id.symbol.value)),
+            currency=currency,
+            price_precision=price_precision,
+            price_increment=Price.from_str(precision_increment(price_precision)),
+            lot_size=lot_size,
+            maker_fee=Decimal("0.0001"),
+            taker_fee=Decimal("0.0001"),
+            ts_event=0,
+            ts_init=0,
+        )
+
+    raise ValueError(f"Unsupported instrument type: {instrument_type}")
 
 
 def load_bars(config, bar_type):
-    data_path = Path(config["data"]["path"])
-    if not data_path.is_absolute():
-        data_path = Path(__file__).parent / data_path
-
-    if not data_path.exists():
-        print(f"Data file not found: {data_path}")
-        print("Generate sample data with: python scripts/generate_sample_data.py")
-        sys.exit(1)
+    df = load_data(config["data"])
 
     price_precision = config["instrument"]["price_precision"]
-    size_precision = config["instrument"]["size_precision"]
+    size_precision = config["instrument"].get("size_precision", 0)
 
-    df = pd.read_csv(data_path, parse_dates=["timestamp"])
     bars = []
     for _, row in df.iterrows():
         ts = int(row["timestamp"].timestamp() * 1e9)
@@ -111,7 +122,7 @@ def load_strategy(config):
     params = dict(strategy_cfg["params"])
     params["instrument_id"] = config["instrument"]["id"]
     params["bar_type"] = config["bar_type"]
-    params["trade_size"] = Decimal(params["trade_size"])
+    params["trade_size"] = Quantity.from_str(str(params["trade_size"]))
 
     return strategy_class(config_class(**params))
 
@@ -121,6 +132,7 @@ def main():
 
     bar_type = BarType.from_str(config["bar_type"])
     venue = Venue(config["venue"]["name"])
+    base_currency = Currency.from_str(config["venue"].get("base_currency", "USD"))
 
     engine = BacktestEngine(
         config=BacktestEngineConfig(trader_id=TraderId(config["trader_id"]))
@@ -130,8 +142,8 @@ def main():
         venue=venue,
         oms_type=OmsType[config["venue"]["oms_type"]],
         account_type=AccountType[config["venue"]["account_type"]],
-        base_currency=USD,
-        starting_balances=[Money(config["venue"]["starting_balance"], USD)],
+        base_currency=base_currency,
+        starting_balances=[Money(config["venue"]["starting_balance"], base_currency)],
     )
 
     instrument = make_instrument(config)

@@ -1,14 +1,15 @@
 {
   "trader_id": "BACKTESTER-001",
   "instrument": {
-    "id": "EURUSD.SIM",
-    "type": "CurrencyPair",
-    "base_currency": "EUR",
-    "quote_currency": "USD",
-    "price_precision": 5,
-    "size_precision": 0
+    "id": "SPY.SIM",
+    "type": "Equity",
+    "symbol": "SPY",
+    "venue": "SIM",
+    "currency": "USD",
+    "price_precision": 2,
+    "lot_size": "1"
   },
-  "bar_type": "EURUSD.SIM-1-MINUTE-LAST-EXTERNAL",
+  "bar_type": "SPY.SIM-1-DAY-LAST-EXTERNAL",
   "venue": {
     "name": "SIM",
     "oms_type": "NETTING",
@@ -16,6 +17,11 @@
     "starting_balance": 100000
   },
   "data": {
+    "source": "yfinance",
+    "ticker": "SPY",
+    "period": "1y",
+    "interval": "1d",
+    "auto_adjust": false,
     "path": "data/sample_data.csv"
   },
   "strategy": {
@@ -25,7 +31,7 @@
     "params": {
       "fast_period": 10,
       "slow_period": 20,
-      "trade_size": "1000"
+      "trade_size": "100"
     }
   }
 }

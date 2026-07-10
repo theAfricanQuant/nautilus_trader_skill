@@ -7,7 +7,7 @@ describe('CLI', () => {
   it('should create a commander program with expected commands', () => {
     const program = createCli();
     const names = program.commands.map((c) => c.name());
-    assert.deepStrictEqual(names.sort(), ['check', 'init', 'run', 'template']);
+    assert.deepStrictEqual(names.sort(), ['check', 'fetch-data', 'init', 'run', 'template']);
   });
 });
 

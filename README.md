@@ -1,6 +1,6 @@
 # NautilusTrader Backtest Harness
 
-A small, `npx`-installable CLI harness that scaffolds and runs [NautilusTrader](https://nautilustrader.io) backtests. It does not replace NautilusTrader — it wraps the Python backtest workflow so you can generate a project, check your environment, and run a backtest from the terminal with one command.
+A small, `npx`-installable CLI harness that scaffolds and runs [NautilusTrader](https://nautilustrader.io) backtests. It does not replace NautilusTrader — it wraps the Python backtest workflow so you can generate a project, fetch data, and run a backtest from the terminal with one command.
 
 This package assumes you use [`uv`](https://docs.astral.sh/uv/) for Python environment management. No `pip` commands are used.
 
@@ -38,8 +38,8 @@ npx nautilus-trader-backtest init my-strategy
 # 2. Move into it
 cd my-strategy
 
-# 3. Generate synthetic sample data
-uv run python scripts/generate_sample_data.py
+# 3. Fetch market data from Yahoo Finance
+npx nautilus-trader-backtest fetch-data --ticker SPY --period 1y --output data/market_data.csv
 
 # 4. Run the backtest
 npx nautilus-trader-backtest run
@@ -58,11 +58,12 @@ my-strategy/
 ├── pyproject.toml              # uv project file with deps
 ├── README.md                   # Project-specific readme
 ├── config.json                 # Backtest configuration
+├── data_loader.py              # CSV / Parquet / HDF5 / yfinance loaders
 ├── strategy.py                 # Your strategy implementation
 ├── run_backtest.py             # Python entry point
 ├── scripts/
-│   └── generate_sample_data.py # Makes a sample CSV of OHLCV bars
-├── data/
+│   └── generate_sample_data.py # Makes synthetic OHLCV bars
+├── data/                       # Drop your market data here
 └── results/
 ```
 
@@ -70,6 +71,16 @@ Example:
 
 ```bash
 npx nautilus-trader-backtest init my-strategy
+```
+
+### `fetch-data`
+
+Downloads OHLCV data from Yahoo Finance into `data/`.
+
+```bash
+npx nautilus-trader-backtest fetch-data --ticker SPY --period 1y --output data/market_data.csv
+npx nautilus-trader-backtest fetch-data --ticker BTC-USD --interval 1h --output data/btc.csv
+npx nautilus-trader-backtest fetch-data --ticker AAPL --start-date 2023-01-01 --end-date 2024-01-01 --output data/aapl.parquet
 ```
 
 ### `run [script-path]`
@@ -105,73 +116,73 @@ Prints a built-in strategy template to stdout. Useful for piping into a new file
 npx nautilus-trader-backtest template ema-cross > strategy.py
 ```
 
+## Data sources
+
+The generated `data_loader.py` supports:
+
+- **CSV** — `data.source: "csv"`
+- **Parquet** — `data.source: "parquet"`
+- **HDF5** — `data.source: "hdf5"`
+- **Yahoo Finance** — `data.source: "yfinance"`
+
+### Using your own CSV
+
+1. Drop `your_data.csv` into `my-strategy/data/`.
+2. Update `config.json`:
+
+```json
+"data": {
+  "source": "csv",
+  "path": "data/your_data.csv"
+}
+```
+
+Your CSV must have columns: `timestamp`, `open`, `high`, `low`, `close`, `volume`.
+
+### Using yfinance
+
+The default generated project uses yfinance. Set it in `config.json`:
+
+```json
+"data": {
+  "source": "yfinance",
+  "ticker": "SPY",
+  "period": "1y",
+  "interval": "1d",
+  "auto_adjust": false
+}
+```
+
+Then either run `fetch-data` to save the file, or just run `npx nautilus-trader-backtest run` — `run_backtest.py` will download it on the fly.
+
+## Instrument types
+
+The generated `run_backtest.py` supports:
+
+- `CurrencyPair` (e.g. `EURUSD.SIM`)
+- `Equity` (e.g. `SPY.XNYS`)
+
+Configure the instrument in `config.json`:
+
+```json
+"instrument": {
+  "id": "SPY.XNYS",
+  "type": "Equity",
+  "symbol": "SPY",
+  "venue": "XNYS",
+  "currency": "USD",
+  "price_precision": 2,
+  "lot_size": "1"
+}
+```
+
 ## How it works
 
 1. The CLI is written in Node.js so it can be distributed via npm and invoked with `npx`.
 2. The actual backtest still runs in Python — NautilusTrader is the engine.
 3. The generated `run_backtest.py` loads `config.json`, builds a `BacktestEngine`, and imports the strategy class from `strategy.py`.
 4. `uv` manages the Python environment and dependencies automatically via `pyproject.toml`.
-
-## Generated project structure
-
-### `pyproject.toml`
-
-```toml
-[project]
-name = "my-strategy"
-version = "0.1.0"
-description = "NautilusTrader backtest project"
-requires-python = ">=3.10"
-dependencies = [
-    "nautilus_trader",
-    "pandas",
-    "numpy",
-]
-```
-
-### `config.json`
-
-```json
-{
-  "trader_id": "BACKTESTER-001",
-  "instrument": {
-    "id": "EURUSD.SIM",
-    "type": "CurrencyPair",
-    "base_currency": "EUR",
-    "quote_currency": "USD",
-    "price_precision": 5,
-    "size_precision": 0
-  },
-  "bar_type": "EURUSD.SIM-1-MINUTE-LAST-EXTERNAL",
-  "venue": {
-    "name": "SIM",
-    "oms_type": "NETTING",
-    "account_type": "MARGIN",
-    "starting_balance": 100000
-  },
-  "data": {
-    "path": "data/sample_data.csv"
-  },
-  "strategy": {
-    "path": "strategy.py",
-    "class_name": "EMACross",
-    "config_class_name": "EMACrossConfig",
-    "params": {
-      "fast_period": 10,
-      "slow_period": 20,
-      "trade_size": "1000"
-    }
-  }
-}
-```
-
-### `strategy.py`
-
-Generated from the built-in EMA-crossover template. You can replace it with any NautilusTrader strategy.
-
-### `run_backtest.py`
-
-The Python harness that wires config → engine → strategy → results.
+5. `data_loader.py` abstracts data ingestion so you can swap CSV, Parquet, HDF5, or Yahoo Finance without touching the backtest wiring.
 
 ## Example
 

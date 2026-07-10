@@ -6,6 +6,7 @@ const TEMPLATE_FILES = [
   { src: 'pyproject.toml.template', dest: 'pyproject.toml' },
   { src: 'project_readme.md.template', dest: 'README.md' },
   { src: 'config.json.template', dest: 'config.json' },
+  { src: 'data_loader.py.template', dest: 'data_loader.py' },
   { src: 'run_backtest.py.template', dest: 'run_backtest.py' },
   { src: 'generate_sample_data.py.template', dest: 'scripts/generate_sample_data.py' },
 ];

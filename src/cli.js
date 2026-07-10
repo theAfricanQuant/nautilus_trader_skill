@@ -4,6 +4,7 @@ const { createProject } = require('./project.js');
 const { runBacktest } = require('./runner.js');
 const { checkEnvironment } = require('./utils.js');
 const { getTemplate, listTemplates } = require('./templates.js');
+const { fetchData } = require('./fetcher.js');
 
 function createCli() {
   const program = new Command();
@@ -31,6 +32,20 @@ function createCli() {
       const target = path.resolve(scriptPath || 'run_backtest.py');
       const extraArgs = command.args.slice(1);
       await runBacktest(target, options.python, extraArgs);
+    });
+
+  program
+    .command('fetch-data')
+    .description('Download OHLCV data from Yahoo Finance into the project data folder')
+    .option('-t, --ticker <ticker>', 'Ticker symbol', 'SPY')
+    .option('-s, --start-date <date>', 'Start date (YYYY-MM-DD)')
+    .option('-e, --end-date <date>', 'End date (YYYY-MM-DD)')
+    .option('-p, --period <period>', 'Yahoo Finance period (used if no start-date)', '1y')
+    .option('-i, --interval <interval>', 'Data interval', '1d')
+    .option('--auto-adjust', 'Adjust OHLC for splits/dividends', false)
+    .option('-o, --output <path>', 'Output file path', 'data/market_data.csv')
+    .action(async (options) => {
+      await fetchData(options);
     });
 
   program
