@@ -160,19 +160,23 @@ Then either run `fetch-data` to save the file, or just run `npx nautilus-trader-
 The generated `run_backtest.py` supports:
 
 - `CurrencyPair` (e.g. `EURUSD.SIM`)
-- `Equity` (e.g. `SPY.XNYS`)
+- `Equity` (e.g. `SPY.SIM`)
 
-Configure the instrument in `config.json`:
+Configure the instrument in `config.json`. The venue in the instrument ID must match the venue configured below it:
 
 ```json
 "instrument": {
-  "id": "SPY.XNYS",
+  "id": "SPY.SIM",
   "type": "Equity",
   "symbol": "SPY",
-  "venue": "XNYS",
+  "venue": "SIM",
   "currency": "USD",
   "price_precision": 2,
   "lot_size": "1"
+},
+"venue": {
+  "name": "SIM",
+  ...
 }
 ```
 
