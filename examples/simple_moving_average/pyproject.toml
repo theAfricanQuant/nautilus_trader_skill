@@ -1,0 +1,13 @@
+[project]
+name = "simple-moving-average"
+version = "0.1.0"
+description = "Simple EMA crossover backtest example for NautilusTrader"
+requires-python = ">=3.10"
+dependencies = [
+    "nautilus_trader",
+    "pandas",
+    "numpy",
+]
+
+[tool.uv]
+package = false

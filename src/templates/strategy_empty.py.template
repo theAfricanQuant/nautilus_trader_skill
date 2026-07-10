@@ -1,0 +1,46 @@
+"""
+Empty strategy template for NautilusTrader.
+
+Fill in your own logic. Adapt imports and method signatures to match the
+NautilusTrader version installed in your environment (v1.x Cython or v2.x PyO3).
+"""
+
+from nautilus_trader.config import StrategyConfig
+from nautilus_trader.model.data import Bar
+from nautilus_trader.trading.strategy import Strategy
+
+
+class MyStrategyConfig(StrategyConfig):
+    """Configuration for your strategy."""
+
+    instrument_id: str
+    bar_type: str
+
+
+class MyStrategy(Strategy):
+    """Your strategy implementation."""
+
+    def __init__(self, config: MyStrategyConfig):
+        super().__init__(config)
+        self._instrument_id_str = config.instrument_id
+        self._bar_type_str = config.bar_type
+        self._bar_type = None
+        self._instrument_id = None
+
+    def on_start(self):
+        """Subscribe to market data when the engine starts."""
+        from nautilus_trader.model.data import BarType
+        from nautilus_trader.model.identifiers import InstrumentId
+
+        self._instrument_id = InstrumentId.from_str(self._instrument_id_str)
+        self._bar_type = BarType.from_str(self._bar_type_str)
+        self.subscribe_bars(self._bar_type)
+
+    def on_bar(self, bar: Bar):
+        """Process each new bar."""
+        # Implement your signal logic here
+        self.log.info(f"Bar received: {bar.close.as_double()}")
+
+    def on_stop(self):
+        """Clean up when the engine stops."""
+        pass

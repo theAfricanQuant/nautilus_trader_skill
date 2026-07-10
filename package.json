@@ -1,0 +1,46 @@
+{
+  "name": "nautilus-trader-backtest",
+  "version": "0.1.0",
+  "description": "CLI harness for running NautilusTrader backtests from any directory",
+  "main": "src/index.js",
+  "bin": {
+    "nautilus-backtest": "bin/nautilus-backtest.js",
+    "ntb": "bin/nautilus-backtest.js"
+  },
+  "scripts": {
+    "test": "node --test tests/**/*.test.js",
+    "lint": "echo 'No linter configured. Add eslint or biome if desired.'"
+  },
+  "keywords": [
+    "nautilus-trader",
+    "backtest",
+    "trading",
+    "quant",
+    "harness",
+    "npx"
+  ],
+  "author": "theAfricanQuant",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {},
+  "files": [
+    "bin/",
+    "src/",
+    "examples/",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theAfricanQuant/nautilus_trader_skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/theAfricanQuant/nautilus_trader_skill/issues"
+  },
+  "homepage": "https://github.com/theAfricanQuant/nautilus_trader_skill#readme"
+}

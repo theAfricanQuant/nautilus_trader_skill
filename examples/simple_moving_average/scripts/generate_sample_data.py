@@ -1,0 +1,50 @@
+"""Generate synthetic OHLCV sample data for the simple EMA crossover example."""
+
+import random
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import pandas as pd
+
+
+def generate_random_walk_bars(start_price=1.10000, n_bars=1000, interval_minutes=1):
+    rows = []
+    price = start_price
+    timestamp = datetime(2024, 1, 1, 0, 0, 0)
+
+    for _ in range(n_bars):
+        change = random.uniform(-0.00050, 0.00050)
+        open_price = price
+        close_price = price + change
+        high_price = max(open_price, close_price) + random.uniform(0, 0.00020)
+        low_price = min(open_price, close_price) - random.uniform(0, 0.00020)
+        volume = random.randint(100, 10000)
+
+        rows.append({
+            "timestamp": timestamp,
+            "open": round(open_price, 5),
+            "high": round(high_price, 5),
+            "low": round(low_price, 5),
+            "close": round(close_price, 5),
+            "volume": volume,
+        })
+
+        price = close_price
+        timestamp += timedelta(minutes=interval_minutes)
+
+    return pd.DataFrame(rows)
+
+
+def main():
+    project_dir = Path(__file__).parent.parent
+    data_dir = project_dir / "data"
+    data_dir.mkdir(exist_ok=True)
+
+    output_path = data_dir / "sample_data.csv"
+    df = generate_random_walk_bars()
+    df.to_csv(output_path, index=False)
+    print(f"Generated {len(df)} sample bars at {output_path}")
+
+
+if __name__ == "__main__":
+    main()

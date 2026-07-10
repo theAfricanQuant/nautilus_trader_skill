@@ -1,0 +1,31 @@
+{
+  "trader_id": "BACKTESTER-001",
+  "instrument": {
+    "id": "EURUSD.SIM",
+    "type": "CurrencyPair",
+    "base_currency": "EUR",
+    "quote_currency": "USD",
+    "price_precision": 5,
+    "size_precision": 0
+  },
+  "bar_type": "EURUSD.SIM-1-MINUTE-LAST-EXTERNAL",
+  "venue": {
+    "name": "SIM",
+    "oms_type": "NETTING",
+    "account_type": "MARGIN",
+    "starting_balance": 100000
+  },
+  "data": {
+    "path": "data/sample_data.csv"
+  },
+  "strategy": {
+    "path": "strategy.py",
+    "class_name": "EMACross",
+    "config_class_name": "EMACrossConfig",
+    "params": {
+      "fast_period": 10,
+      "slow_period": 20,
+      "trade_size": "1000"
+    }
+  }
+}
