@@ -224,4 +224,6 @@ npx nautilus-trader-backtest init my-strategy
 
 ## License
 
-MIT
+This CLI harness is licensed under the MIT License — see [`LICENSE`](LICENSE).
+
+This package builds on [NautilusTrader](https://nautilustrader.io), which is licensed under LGPL-3.0-or-later by Nautech Systems Pty Ltd. For a full licensing breakdown, see [`LICENSES.md`](LICENSES.md).
