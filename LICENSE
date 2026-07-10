@@ -19,3 +19,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+------------------------------------------------------------------------------
+
+This package is built on top of NautilusTrader, an open-source algorithmic
+trading platform by Nautech Systems Pty Ltd.
+
+NautilusTrader is licensed under the GNU Lesser General Public License v3.0
+or later (LGPL-3.0-or-later).
+
+Copyright (c) 2015-2026 Nautech Systems Pty Ltd. All rights reserved.
+https://nautilustrader.io
+https://github.com/nautechsystems/nautilus_trader
